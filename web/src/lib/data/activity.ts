@@ -15,6 +15,11 @@ const store = createStore<ActionRecord[]>(seedActivity);
 export const useActivity = store.use;
 export const getActivityList = store.get;
 
+/** Adds a record of something LANA did (newest first). */
+export function addActivityRecord(record: ActionRecord) {
+  store.set((list) => [record, ...list]);
+}
+
 function patch(id: string, fn: (a: ActionRecord) => ActionRecord) {
   store.set((list) => list.map((a) => (a.id === id ? fn(a) : a)));
 }

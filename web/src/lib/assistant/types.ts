@@ -1,4 +1,4 @@
-import type { ActionField, ActionLink, ActionStatus, ActionStep, IntegrationId } from "@/lib/data/types";
+import type { ActionField, ActionLink, ActionStatus, ActionStep, IntegrationId, LibraryItemKind } from "@/lib/data/types";
 
 /** What LANA is doing right now in a conversation. Drives the header status and the thinking indicator. */
 export type Phase = "idle" | "understanding" | "planning" | "responding" | "executing" | "awaiting_approval";
@@ -16,6 +16,8 @@ export interface ActionRun {
     confirmLabel: string;
     decision?: "approved" | "declined";
     decidedAt?: string;
+    /** Library items that will be attached or pasted. Shown on the approval card. */
+    attachments?: ApprovalAttachment[];
   };
   summary?: string;
   error?: { message: string; cta?: ActionLink };
@@ -26,6 +28,14 @@ export interface ActionRun {
   simulated: boolean;
 }
 
+export interface ApprovalAttachment {
+  libraryItemId: string;
+  kind: LibraryItemKind;
+  name: string;
+  /** "Emmanuel_Ola_CV_2026.pdf · 184 KB", the URL, or "Pasted into the message". */
+  detail: string;
+}
+
 export interface Attachment {
   id: string;
   name: string;
@@ -34,7 +44,7 @@ export interface Attachment {
 }
 
 export interface ContextRef {
-  kind: "integration" | "project";
+  kind: "integration" | "project" | "library";
   id: string;
   label: string;
 }

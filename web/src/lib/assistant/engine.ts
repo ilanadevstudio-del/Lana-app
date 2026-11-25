@@ -1,10 +1,11 @@
 "use client";
 
 import { uid } from "@/lib/data/store";
+import { getLibrary } from "@/lib/data/library";
 import type { ActionField, IntegrationId, StepState } from "@/lib/data/types";
 import { pickScenario } from "./scenarios";
 import { findConversation, setConversations, updateAction, updateConversation, updateMessage } from "./store";
-import type { ActionRun, Conversation, Message, Phase, SendInput } from "./types";
+import type { ActionRun, ApprovalAttachment, ContextRef, Conversation, Message, Phase, SendInput } from "./types";
 
 /**
  * Demo execution engine.
@@ -23,7 +24,7 @@ export interface ActionHandle {
   /** Mark a step running, wait, then mark it done. */
   run(index: number, detail?: string, ms?: number): Promise<void>;
   /** Pause for user approval. The engine resumes via approve() / decline(). */
-  requestApproval(fields: ActionField[], confirmLabel: string, pending: PendingApproval): void;
+  requestApproval(fields: ActionField[], confirmLabel: string, pending: PendingApproval, attachments?: ApprovalAttachment[]): void;
   /** Finish the action. Pass verified=false when the service didn't confirm the result. */
   finish(outcome: { verified: boolean; summary?: string; links?: ActionRun["links"] }): void;
 }
@@ -43,7 +44,8 @@ export interface ScriptContext {
   fail(message: string): never;
 }
 
-export type Script = (ctx: ScriptContext, input: string) => Promise<void>;
+/** `context` holds what the user explicitly attached with "@" (apps, projects, Library items). */
+export type Script = (ctx: ScriptContext, input: string, context?: ContextRef[]) => Promise<void>;
 
 // ── Internals ─────────────────────────────────────────────────────────────────
 
@@ -88,10 +90,10 @@ function makeHandle(convId: string, msgId: string, actionId: string, ctx: Script
       await ctx.wait(ms ?? jitter(650, 1100));
       step(index, "done", detail);
     },
-    requestApproval(fields, confirmLabel, pending) {
+    requestApproval(fields, confirmLabel, pending, attachments) {
       pendingApprovals.set(actionId, pending);
       step(pending.waitingStep, "running", "Waiting for you");
-      patch({ status: "awaiting_approval", approval: { fields, confirmLabel } });
+      patch({ status: "awaiting_approval", approval: { fields, confirmLabel, attachments } });
       ctx.phase("awaiting_approval");
     },
     finish({ verified, summary, links }) {
@@ -207,14 +209,14 @@ function moveToTop(convId: string) {
   });
 }
 
-async function respond(convId: string, msgId: string, text: string) {
-  const scenario = pickScenario(text);
+async function respond(convId: string, msgId: string, text: string, context?: ContextRef[]) {
+  const scenario = pickScenario(text, context);
   await execute(convId, msgId, async (ctx) => {
     ctx.phase("understanding");
     await ctx.wait(jitter(500, 800));
     ctx.phase("planning");
     await ctx.wait(jitter(400, 700));
-    await scenario(ctx, text);
+    await scenario(ctx, text, context);
   });
 }
 
@@ -258,7 +260,7 @@ export async function send(convId: string, input: SendInput) {
     updatedAt: now(),
   }));
   moveToTop(convId);
-  await respond(convId, reply.id, input.text);
+  await respond(convId, reply.id, input.text, input.context);
 }
 
 /** Re-runs the last request: drops the last reply and generates a new one. */
@@ -269,6 +271,7 @@ export async function retry(convId: string) {
   const last = conv.messages[conv.messages.length - 1];
   if (!lastUser) return;
   const text = lastUser.parts.find((p) => p.type === "text")?.text ?? "";
+  const context = lastUser.context;
   const reply: Message = { id: uid("m"), role: "assistant", parts: [], streaming: true, createdAt: now() };
   updateConversation(convId, (c) => ({
     ...c,
@@ -276,7 +279,7 @@ export async function retry(convId: string) {
     phase: "understanding",
     messages: [...(last?.role === "assistant" ? c.messages.slice(0, -1) : c.messages), reply],
   }));
-  await respond(convId, reply.id, text);
+  await respond(convId, reply.id, text, context);
 }
 
 export function stop(convId: string) {
@@ -287,6 +290,26 @@ export async function approve(convId: string, msgId: string, actionId: string, f
   const pending = pendingApprovals.get(actionId);
   if (!pending) return;
   pendingApprovals.delete(actionId);
+
+  // Never send something that has left the Library since the approval was requested.
+  const missing = missingAttachments(findAction(convId, msgId, actionId));
+  if (missing.length) {
+    updateAction(convId, msgId, actionId, (a) => ({
+      ...a,
+      status: "cancelled",
+      finishedAt: now(),
+      approval: a.approval && { ...a.approval, decision: "declined", decidedAt: now() },
+      steps: a.steps.map((s, i) =>
+        i === pending.waitingStep ? { ...s, state: "failed", detail: "Item was removed from your Library" } : s.state === "pending" ? { ...s, state: "skipped" } : s,
+      ),
+    }));
+    updateMessage(convId, msgId, (m) => ({ ...m, streaming: true }));
+    updateConversation(convId, (c) => ({ ...c, busy: true, phase: "responding" }));
+    await execute(convId, msgId, (ctx) =>
+      ctx.say(`${missing.map((a) => `**${a.name}**`).join(" and ")} isn't in your Library any more, so I didn't send anything.`),
+    );
+    return;
+  }
 
   updateAction(convId, msgId, actionId, (a) => ({
     ...a,
@@ -329,6 +352,19 @@ export async function decline(convId: string, msgId: string, actionId: string) {
     if (pending.onDecline) await pending.onDecline(ctx);
     else await ctx.say("Okay, I've cancelled that. Nothing was changed.");
   });
+}
+
+function findAction(convId: string, msgId: string, actionId: string) {
+  const part = findConversation(convId)
+    ?.messages.find((m) => m.id === msgId)
+    ?.parts.find((p) => p.type === "action" && p.action.id === actionId);
+  return part?.type === "action" ? part.action : undefined;
+}
+
+/** Attachments whose Library item no longer exists. */
+export function missingAttachments(action: ActionRun | undefined): ApprovalAttachment[] {
+  const ids = new Set(getLibrary().map((i) => i.id));
+  return action?.approval?.attachments?.filter((a) => !ids.has(a.libraryItemId)) ?? [];
 }
 
 /** True if the approval is still actionable (survives only for the current page session). */

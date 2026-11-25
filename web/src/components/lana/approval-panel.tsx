@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type KeyboardEvent } from "react";
+import Link from "next/link";
+import { AlignLeft, FileText, Link2 } from "lucide-react";
+import type { ApprovalAttachment } from "@/lib/assistant/types";
 import { Pencil, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -24,6 +27,8 @@ export function ApprovalPanel({
   onApprove,
   onDecline,
   disabled,
+  disabledReason,
+  attachments,
   className,
 }: {
   integrationId: IntegrationId;
@@ -35,6 +40,10 @@ export function ApprovalPanel({
   onDecline: () => void;
   /** True when the action can no longer be approved (e.g. the session that proposed it ended). */
   disabled?: boolean;
+  /** Shown instead of the shortcut hint when the panel is disabled. */
+  disabledReason?: string;
+  /** Library items that will be attached or pasted. */
+  attachments?: ApprovalAttachment[];
   className?: string;
 }) {
   const [editing, setEditing] = useState(false);
@@ -109,6 +118,30 @@ export function ApprovalPanel({
         ))}
       </dl>
 
+      {attachments && attachments.length > 0 && (
+        <div className="mx-3 mt-2 rounded-md border border-line bg-panel px-3 py-2">
+          <p className="mb-1.5 text-xs text-fg-subtle">Attachments</p>
+          <ul className="flex flex-col gap-1.5">
+            {attachments.map((att) => {
+              const Icon = att.kind === "link" ? Link2 : att.kind === "text" ? AlignLeft : FileText;
+              return (
+                <li key={att.libraryItemId}>
+                  <Link href="/library" className="flex items-center gap-2.5 rounded text-sm hover:underline">
+                    <span className="grid size-7 shrink-0 place-items-center rounded-md border border-line bg-raised">
+                      <Icon className="size-3.5 text-fg-subtle" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium text-fg">{att.name}</span>
+                      <span className="block truncate text-xs text-fg-subtle">{att.detail}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 px-3 py-3">
         <Button variant="primary" size="md" onClick={() => onApprove(current)} disabled={disabled || invalid}>
           {confirmLabel}
@@ -123,7 +156,7 @@ export function ApprovalPanel({
         )}
         <span className="ml-auto hidden items-center gap-1 text-2xs text-fg-subtle md:flex">
           {disabled ? (
-            "This request expired. Ask again to retry."
+            (disabledReason ?? "This request expired. Ask again to retry.")
           ) : (
             <>
               <Kbd>Ctrl</Kbd>
