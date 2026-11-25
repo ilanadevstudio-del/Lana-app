@@ -7,6 +7,7 @@ import { Greeting } from "@/components/home/greeting";
 import { RemindersCard } from "@/components/home/reminders-card";
 import { TasksCard } from "@/components/home/tasks-card";
 import { Orb } from "@/components/orb";
+import { PageContainer } from "@/components/shell/page-container";
 import { homeData } from "@/lib/mock/home";
 
 function plural(n: number, word: string) {
@@ -19,7 +20,7 @@ export default function HomePage() {
   const summary = `${plural(openTasks, "task")} · ${plural(events.length, "event")}`;
 
   return (
-    <>
+    <PageContainer>
       <section className="flex flex-col items-center pb-8 pt-6 text-center md:pt-2">
         <Link
           href="/assistant"
@@ -42,6 +43,6 @@ export default function HomePage() {
       </div>
 
       <AskBar />
-    </>
+    </PageContainer>
   );
 }

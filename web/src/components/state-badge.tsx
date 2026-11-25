@@ -1,15 +1,16 @@
 import {
   CheckIcon,
   CircleNotchIcon,
+  MinusCircleIcon,
   ShieldCheckIcon,
   SparkleIcon,
   WarningIcon,
   XIcon,
 } from "@phosphor-icons/react/ssr";
 import type { Icon } from "@phosphor-icons/react";
-import type { ActionState } from "@/lib/types";
+import type { RunState } from "@/lib/assistant/types";
 
-const STATES: Record<ActionState, { label: string; color: string; icon: Icon; spin?: boolean }> = {
+const STATES: Record<RunState, { label: string; color: string; icon: Icon; spin?: boolean }> = {
   understanding: { label: "Understanding", color: "var(--accent)", icon: SparkleIcon },
   planning: { label: "Planning", color: "var(--accent)", icon: SparkleIcon },
   awaiting_approval: { label: "Needs approval", color: "var(--accent)", icon: ShieldCheckIcon },
@@ -17,9 +18,10 @@ const STATES: Record<ActionState, { label: string; color: string; icon: Icon; sp
   completed: { label: "Completed", color: "var(--success)", icon: CheckIcon },
   failed: { label: "Failed", color: "var(--danger)", icon: XIcon },
   partially_completed: { label: "Partial", color: "var(--warning)", icon: WarningIcon },
+  cancelled: { label: "Cancelled", color: "var(--muted)", icon: MinusCircleIcon },
 };
 
-export function StateBadge({ state }: { state: ActionState }) {
+export function StateBadge({ state }: { state: RunState }) {
   const { label, color, icon: Glyph, spin } = STATES[state];
   return (
     <span

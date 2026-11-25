@@ -1,5 +1,6 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { AssistantView } from "@/components/assistant/assistant-view";
+import { homeData } from "@/lib/mock/home";
 
-export default function Page() {
-  return <ComingSoon title="Assistant" description="Talk to Lana, delegate tasks and watch actions happen in real time." />;
+export default function AssistantPage() {
+  return <AssistantView userName={homeData.user.firstName} />;
 }

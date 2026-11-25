@@ -17,6 +17,9 @@ export type ActionState =
   | "failed"
   | "partially_completed";
 
+/** Lana's visual state: the action lifecycle plus voice listening. */
+export type OrbState = "idle" | "listening" | ActionState;
+
 export type Priority = "high" | "medium" | "low";
 
 export interface TaskItem {

@@ -8,10 +8,9 @@ import {
   useReducedMotion,
   useTransform,
 } from "motion/react";
-import type { ActionState } from "@/lib/types";
+import type { OrbState } from "@/lib/types";
 
-/** Lana's visual presence. Mirrors the assistant lifecycle (PRD §6.3) plus voice listening. */
-export type OrbState = "idle" | "listening" | ActionState;
+export type { OrbState };
 
 interface OrbConfig {
   /** Swirl speed in degrees per second. */

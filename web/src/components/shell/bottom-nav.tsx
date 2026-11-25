@@ -36,7 +36,7 @@ export function BottomNav() {
           aria-current={assistantActive ? "page" : undefined}
           className="-mt-8 rounded-full p-1.5 transition-transform active:scale-95"
         >
-          <Orb size={54} state={assistantActive ? "listening" : "idle"} />
+          <Orb size={54} />
         </Link>
 
         {RIGHT.map((item) => (
