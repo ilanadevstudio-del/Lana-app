@@ -1,5 +1,8 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
+import type { Metadata } from "next";
+import { HistoryView } from "@/components/activity/history-view";
 
-export default function Page() {
-  return <PlaceholderPage title="Activity" />;
+export const metadata: Metadata = { title: "Activity" };
+
+export default function ActivityPage() {
+  return <HistoryView />;
 }

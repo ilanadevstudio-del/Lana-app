@@ -1,5 +1,8 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
+import type { Metadata } from "next";
+import { CalendarView } from "@/components/calendar/calendar-view";
 
-export default function Page() {
-  return <PlaceholderPage title="Calendar" />;
+export const metadata: Metadata = { title: "Calendar" };
+
+export default function CalendarPage() {
+  return <CalendarView />;
 }

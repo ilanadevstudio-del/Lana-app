@@ -1,5 +1,8 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
+import type { Metadata } from "next";
+import { TasksView } from "@/components/tasks/tasks-view";
 
-export default function Page() {
-  return <PlaceholderPage title="Tasks" />;
+export const metadata: Metadata = { title: "Tasks" };
+
+export default function TasksPage() {
+  return <TasksView />;
 }

@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <PlaceholderPage title="Settings" />;
+export default function SettingsIndex() {
+  redirect("/settings/profile");
 }

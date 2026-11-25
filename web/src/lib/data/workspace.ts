@@ -17,6 +17,27 @@ const projects = createStore<Project[]>(seedProjects);
 export const useProjects = projects.use;
 export const getProjects = projects.get;
 
+export function createProject(input: Pick<Project, "name" | "description" | "status" | "color">) {
+  const now = new Date().toISOString();
+  const words = input.name.trim().split(/\s+/);
+  const key = (words.length > 1 ? words[0][0] + words[1][0] : input.name.slice(0, 2)).toUpperCase();
+  const project: Project = {
+    ...input,
+    id: `${input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${Date.now().toString(36).slice(-4)}`,
+    key,
+    milestones: [],
+    integrations: [],
+    createdAt: now,
+    updatedAt: now,
+  };
+  projects.set((list) => [project, ...list]);
+  return project;
+}
+
+export function updateUser(patch: Partial<ReturnType<typeof user.get>>) {
+  user.set((u) => ({ ...u, ...patch }));
+}
+
 export function updateProject(id: string, patch: Partial<Project>) {
   projects.set((list) => list.map((p) => (p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p)));
 }

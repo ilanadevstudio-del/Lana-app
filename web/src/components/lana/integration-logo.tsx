@@ -44,7 +44,7 @@ export function IntegrationLogo({
       <path d={mark.path} />
     </svg>
   ) : (
-    <span aria-hidden className="font-semibold leading-none" style={{ color, fontSize: Math.round(size * 0.42) }}>
+    <span aria-hidden className="font-semibold leading-none" style={{ color, fontSize: Math.round(size * (bare ? 0.85 : 0.42)) }}>
       {name.slice(0, 1)}
     </span>
   );

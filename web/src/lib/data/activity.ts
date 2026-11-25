@@ -28,6 +28,7 @@ export function approveAction(id: string, fields?: ActionField[]) {
       ...a,
       fields: fields ?? a.fields,
       status: "executing",
+      decidedAt: new Date().toISOString(),
       steps: a.steps.map((s, i) =>
         i === w ? { ...s, state: "done", detail: "Approved by you" } : i === w + 1 ? { ...s, state: "running" } : s,
       ),
@@ -55,6 +56,7 @@ export function rejectAction(id: string) {
       ...a,
       status: "cancelled",
       finishedAt: new Date().toISOString(),
+      decidedAt: new Date().toISOString(),
       summary: "Declined by you. Nothing was changed.",
       steps: a.steps.map((s, i) =>
         i === w ? { ...s, state: "failed", detail: "Declined by you" } : s.state === "pending" ? { ...s, state: "skipped" } : s,

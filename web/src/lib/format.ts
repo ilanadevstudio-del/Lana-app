@@ -66,6 +66,12 @@ export function formatDay(d: Date | string, now = new Date()) {
   return formatShortDate(d);
 }
 
+/** formatDay for use mid-sentence: "today", "tomorrow", but "Friday" and "Mar 4" keep their capitals. */
+export function formatDayInline(d: Date | string, now = new Date()) {
+  const s = formatDay(d, now);
+  return Math.abs(dayDiff(d, now)) <= 1 ? s.toLowerCase() : s;
+}
+
 /** Compact relative time: "now", "4m", "2h", "Yesterday", "Mar 4". */
 export function formatRelative(d: Date | string, now = new Date()) {
   const ms = now.getTime() - new Date(d).getTime();

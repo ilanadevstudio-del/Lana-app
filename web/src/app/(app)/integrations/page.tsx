@@ -1,5 +1,8 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
+import type { Metadata } from "next";
+import { IntegrationsView } from "@/components/integrations/integrations-view";
 
-export default function Page() {
-  return <PlaceholderPage title="Integrations" />;
+export const metadata: Metadata = { title: "Integrations" };
+
+export default function IntegrationsPage() {
+  return <IntegrationsView />;
 }

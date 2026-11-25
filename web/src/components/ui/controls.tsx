@@ -1,7 +1,7 @@
 "use client";
 
 import * as RTabs from "@radix-ui/react-tabs";
-import { useId, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -170,13 +170,16 @@ export function SettingRow({
   children: ReactNode;
   htmlFor?: string;
 }) {
-  const fallback = useId();
   return (
     <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
       <div className="min-w-0">
-        <label htmlFor={htmlFor ?? fallback} className="text-sm font-medium text-fg">
-          {title}
-        </label>
+        {htmlFor ? (
+          <label htmlFor={htmlFor} className="text-sm font-medium text-fg">
+            {title}
+          </label>
+        ) : (
+          <p className="text-sm font-medium text-fg">{title}</p>
+        )}
         {description && <p className="mt-0.5 text-xs text-fg-subtle">{description}</p>}
       </div>
       <div className="shrink-0">{children}</div>

@@ -1,5 +1,8 @@
-import { PlaceholderPage } from "@/components/shell/placeholder-page";
+import type { Metadata } from "next";
+import { MemoryView } from "@/components/memory/memory-view";
 
-export default function Page() {
-  return <PlaceholderPage title="Memory" />;
+export const metadata: Metadata = { title: "Memory" };
+
+export default function MemoryPage() {
+  return <MemoryView />;
 }

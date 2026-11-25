@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CalendarDays, CircleCheck, Home, Menu as MenuIcon, Monitor, Moon, Search, Sparkles, Sun } from "lucide-react";
-import { LanaMark } from "@/components/lana/logo";
+import { LanaMark, LanaWordmark } from "@/components/lana/logo";
 import { Avatar } from "@/components/ui/avatar";
 import { IconButton } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/overlays";
@@ -13,23 +13,18 @@ import { useUser } from "@/lib/data/workspace";
 import { setUi } from "@/lib/ui-state";
 import { useThemePreference } from "@/lib/use-theme";
 import { AccountMenu } from "./account-menu";
-import { ALL_NAV, PRIMARY_NAV, SECONDARY_NAV, SETTINGS_NAV, isActive } from "./nav";
+import { PRIMARY_NAV, SECONDARY_NAV, SETTINGS_NAV, isActive } from "./nav";
 import { WithPathname } from "./with-pathname";
 
 /** Mobile top bar: brand, current section, search and account. */
 export function MobileTopBar() {
-  return <WithPathname>{(pathname) => <TopBar pathname={pathname ?? ""} />}</WithPathname>;
-}
-
-function TopBar({ pathname }: { pathname: string }) {
   const user = useUser();
-  const current = ALL_NAV.find((n) => isActive(pathname, n.href));
   return (
     <header className="flex h-12 shrink-0 items-center gap-2.5 border-b border-line-subtle bg-canvas px-3 pt-[env(safe-area-inset-top)] md:hidden">
       <Link href="/" aria-label="LANA home">
         <LanaMark size={22} />
       </Link>
-      <span className="text-sm font-semibold">{current?.label ?? "LANA"}</span>
+      <LanaWordmark className="text-sm" />
       <div className="ml-auto flex items-center gap-1">
         <IconButton label="Search" onClick={() => setUi({ paletteOpen: true })}>
           <Search />

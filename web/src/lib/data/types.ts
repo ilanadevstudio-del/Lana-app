@@ -133,6 +133,8 @@ export interface ActionRecord {
   /** For scheduled actions. */
   runAt?: string;
   finishedAt?: string;
+  /** When the user approved or declined it. */
+  decidedAt?: string;
   error?: string;
   links?: ActionLink[];
   /** Where the request came from. */

@@ -1,6 +1,11 @@
+import { twMerge } from "tailwind-merge";
+
 type ClassValue = string | false | null | undefined | 0;
 
-/** Joins class names, skipping falsy values. Components avoid conflicting utilities, so no merge step is needed. */
+/**
+ * Joins class names, skipping falsy values, and resolves Tailwind conflicts so a
+ * `className` override (e.g. `py-0` over a component's `py-2`) reliably wins.
+ */
 export function cn(...classes: ClassValue[]) {
-  return classes.filter(Boolean).join(" ");
+  return twMerge(classes.filter(Boolean).join(" "));
 }
