@@ -3,12 +3,12 @@
 import { itemPhrase, recipientLabel } from "@/components/library/library-meta";
 import { addActivityRecord } from "@/lib/data/activity";
 import { getLibrary, recordShare, resolveFromLibrary } from "@/lib/data/library";
+import { attachmentFor } from "@/lib/data/library-attachments";
 import { extractLibraryQuery, type LibraryResolution } from "@/lib/data/library-resolve";
 import type { ActionField, LibraryItem } from "@/lib/data/types";
 import { getUser } from "@/lib/data/workspace";
-import { formatBytes } from "@/lib/format";
 import type { Script } from "./engine";
-import type { ApprovalAttachment, ContextRef } from "./types";
+import type { ContextRef } from "./types";
 
 /**
  * "Send my CV to …": finds the item in the Library, drafts the email and waits for approval.
@@ -22,11 +22,6 @@ export function parseRecipient(request: string): string | null {
   if (email) return email[0].toLowerCase();
   const name = request.match(/\bto\s+([A-Z][a-z]+)\b/);
   return name ? `${name[1].toLowerCase()}@example.com` : null;
-}
-
-function attachmentFor(item: LibraryItem): ApprovalAttachment {
-  const detail = item.file ? `${item.file.fileName} · ${formatBytes(item.file.size)}` : item.link ? item.link.url : "Pasted into the message";
-  return { libraryItemId: item.id, kind: item.kind, name: item.name, detail };
 }
 
 function draftBody(item: LibraryItem, to: string) {

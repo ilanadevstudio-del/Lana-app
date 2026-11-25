@@ -10,7 +10,7 @@ import { Markdown } from "@/components/lana/markdown";
 import { Button, IconButton } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/feedback";
 import { Tooltip } from "@/components/ui/tooltip";
-import { approve, decline, isApprovalPending, missingAttachments, retry } from "@/lib/assistant/engine";
+import { approvalBlockReason, approve, decline, isApprovalPending, retry } from "@/lib/assistant/engine";
 import { useLibrary } from "@/lib/data/library";
 import type { Message, Phase } from "@/lib/assistant/types";
 import { cn } from "@/lib/cn";
@@ -99,13 +99,8 @@ export function AssistantMessage({
                   decision={part.action.approval.decision}
                   decidedAt={part.action.approval.decidedAt}
                   attachments={part.action.approval.attachments}
-                  disabled={
-                    part.action.status === "awaiting_approval" &&
-                    (!isApprovalPending(part.action.id) || (!!library && missingAttachments(part.action).length > 0))
-                  }
-                  disabledReason={
-                    library && missingAttachments(part.action).length > 0 ? "An attachment was removed from your Library." : undefined
-                  }
+                  disabled={part.action.status === "awaiting_approval" && !isApprovalPending(part.action.id)}
+                  approveBlockedReason={library && part.action.status === "awaiting_approval" ? approvalBlockReason(part.action) : undefined}
                   onApprove={(fields) => approve(convId, message.id, part.action.id, fields)}
                   onDecline={() => decline(convId, message.id, part.action.id)}
                 />

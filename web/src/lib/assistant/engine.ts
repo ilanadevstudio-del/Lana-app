@@ -2,10 +2,12 @@
 
 import { uid } from "@/lib/data/store";
 import { getLibrary } from "@/lib/data/library";
+import { attachmentProblems } from "@/lib/data/library-attachments";
 import type { ActionField, IntegrationId, StepState } from "@/lib/data/types";
 import { pickScenario } from "./scenarios";
 import { findConversation, setConversations, updateAction, updateConversation, updateMessage } from "./store";
 import type { ActionRun, ApprovalAttachment, ContextRef, Conversation, Message, Phase, SendInput } from "./types";
+export type { ApprovalAttachment };
 
 /**
  * Demo execution engine.
@@ -291,22 +293,22 @@ export async function approve(convId: string, msgId: string, actionId: string, f
   if (!pending) return;
   pendingApprovals.delete(actionId);
 
-  // Never send something that has left the Library since the approval was requested.
-  const missing = missingAttachments(findAction(convId, msgId, actionId));
-  if (missing.length) {
+  // Never send something that isn't exactly what the approval card showed.
+  const problems = blockedAttachments(findAction(convId, msgId, actionId));
+  if (problems.length) {
     updateAction(convId, msgId, actionId, (a) => ({
       ...a,
       status: "cancelled",
       finishedAt: now(),
       approval: a.approval && { ...a.approval, decision: "declined", decidedAt: now() },
       steps: a.steps.map((s, i) =>
-        i === pending.waitingStep ? { ...s, state: "failed", detail: "Item was removed from your Library" } : s.state === "pending" ? { ...s, state: "skipped" } : s,
+        i === pending.waitingStep ? { ...s, state: "failed", detail: "Attachment no longer matches" } : s.state === "pending" ? { ...s, state: "skipped" } : s,
       ),
     }));
     updateMessage(convId, msgId, (m) => ({ ...m, streaming: true }));
     updateConversation(convId, (c) => ({ ...c, busy: true, phase: "responding" }));
     await execute(convId, msgId, (ctx) =>
-      ctx.say(`${missing.map((a) => `**${a.name}**`).join(" and ")} isn't in your Library any more, so I didn't send anything.`),
+      ctx.say(`${problems.map((p) => p.message).join(" ")} I didn't send anything.`),
     );
     return;
   }
@@ -361,10 +363,15 @@ function findAction(convId: string, msgId: string, actionId: string) {
   return part?.type === "action" ? part.action : undefined;
 }
 
-/** Attachments whose Library item no longer exists. */
-export function missingAttachments(action: ActionRun | undefined): ApprovalAttachment[] {
-  const ids = new Set(getLibrary().map((i) => i.id));
-  return action?.approval?.attachments?.filter((a) => !ids.has(a.libraryItemId)) ?? [];
+/** Attachments that can't be sent as shown: removed, now never-share, or changed since drafting. */
+export function blockedAttachments(action: ActionRun | undefined) {
+  return attachmentProblems(action?.approval?.attachments ?? [], getLibrary());
+}
+
+/** Why an approval can't go ahead, for the card; undefined when it can. */
+export function approvalBlockReason(action: ActionRun | undefined): string | undefined {
+  const problems = blockedAttachments(action);
+  return problems.length ? problems.map((p) => p.message).join(" ") : undefined;
 }
 
 /** True if the approval is still actionable (survives only for the current page session). */

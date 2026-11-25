@@ -2,7 +2,7 @@
 
 import { useState, type KeyboardEvent } from "react";
 import Link from "next/link";
-import { AlignLeft, FileText, Link2 } from "lucide-react";
+import { AlertTriangle, AlignLeft, FileText, Link2 } from "lucide-react";
 import type { ApprovalAttachment } from "@/lib/assistant/types";
 import { Pencil, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ export function ApprovalPanel({
   onDecline,
   disabled,
   disabledReason,
+  approveBlockedReason,
   attachments,
   className,
 }: {
@@ -42,6 +43,8 @@ export function ApprovalPanel({
   disabled?: boolean;
   /** Shown instead of the shortcut hint when the panel is disabled. */
   disabledReason?: string;
+  /** When set, Approve and Edit are unavailable for this reason (shown on every screen size); Decline still works. */
+  approveBlockedReason?: string;
   /** Library items that will be attached or pasted. */
   attachments?: ApprovalAttachment[];
   className?: string;
@@ -63,7 +66,7 @@ export function ApprovalPanel({
   }
 
   function onKeyDown(e: KeyboardEvent) {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !disabled && !invalid) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !disabled && !approveBlockedReason && !invalid) {
       e.preventDefault();
       onApprove(current);
     }
@@ -142,15 +145,22 @@ export function ApprovalPanel({
         </div>
       )}
 
+      {approveBlockedReason && (
+        <p role="alert" className="mx-3 mt-2 flex items-start gap-2 rounded-md bg-warning-soft px-3 py-2 text-xs text-fg">
+          <AlertTriangle className="mt-px size-3.5 shrink-0 text-warning" />
+          {approveBlockedReason}
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 px-3 py-3">
-        <Button variant="primary" size="md" onClick={() => onApprove(current)} disabled={disabled || invalid}>
+        <Button variant="primary" size="md" onClick={() => onApprove(current)} disabled={disabled || !!approveBlockedReason || invalid}>
           {confirmLabel}
         </Button>
         <Button variant="secondary" size="md" onClick={onDecline} disabled={disabled}>
           Decline
         </Button>
         {editable && (
-          <Button variant="ghost" size="md" icon={<Pencil />} onClick={() => setEditing((e) => !e)} disabled={disabled}>
+          <Button variant="ghost" size="md" icon={<Pencil />} onClick={() => setEditing((e) => !e)} disabled={disabled || !!approveBlockedReason}>
             {editing ? "Done editing" : "Edit"}
           </Button>
         )}

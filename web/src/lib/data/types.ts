@@ -247,6 +247,15 @@ export interface LibraryShare {
   actionId?: string;
 }
 
+/** A Library item as shown on an approval card, snapshotted when the approval is drafted. */
+export interface LibraryAttachment {
+  libraryItemId: string;
+  kind: LibraryItemKind;
+  name: string;
+  /** "Emmanuel_Ola_CV_2026.pdf · 184 KB", the URL, or "Pasted into the message". */
+  detail: string;
+}
+
 /** Something the user shares repeatedly: a file, a link or a text snippet. */
 export interface LibraryItem {
   id: string;
