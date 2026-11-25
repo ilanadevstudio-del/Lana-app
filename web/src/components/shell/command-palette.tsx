@@ -4,10 +4,11 @@ import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import * as RD from "@radix-ui/react-dialog";
 import { Command } from "cmdk";
-import { CalendarPlus, CircleCheck, Keyboard, MessageSquare, Moon, PanelLeft, Plus, Search, Sparkles, Sun } from "lucide-react";
+import { CalendarPlus, CircleCheck, LibraryBig, Keyboard, MessageSquare, Moon, PanelLeft, Plus, Search, Sparkles, Sun } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { startConversation } from "@/lib/assistant/engine";
 import { useConversations } from "@/lib/assistant/store";
+import { useLibrary } from "@/lib/data/library";
 import { useTasks } from "@/lib/data/tasks";
 import { useProjects } from "@/lib/data/workspace";
 import { setThemePreference } from "@/lib/use-theme";
@@ -21,6 +22,7 @@ export function CommandPalette() {
   const tasks = useTasks();
   const projects = useProjects();
   const conversations = useConversations();
+  const library = useLibrary();
 
   const close = () => {
     setUi({ paletteOpen: false });
@@ -147,6 +149,25 @@ export function CommandPalette() {
                           onSelect={() => run(() => router.push(`/projects/${p.id}`))}
                         >
                           {p.name}
+                        </Item>
+                      ))}
+                    </Command.Group>
+                  )}
+                  {library && library.length > 0 && (
+                    <Command.Group heading="Library">
+                      {library.map((item) => (
+                        <Item
+                          key={item.id}
+                          value={`library ${item.name} ${item.aliases.join(" ")}`}
+                          icon={<LibraryBig />}
+                          onSelect={() =>
+                            run(() => {
+                              setUi({ openLibraryItemId: item.id });
+                              router.push("/library");
+                            })
+                          }
+                        >
+                          {item.name}
                         </Item>
                       ))}
                     </Command.Group>

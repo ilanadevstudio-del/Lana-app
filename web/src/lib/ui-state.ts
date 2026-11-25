@@ -18,6 +18,8 @@ interface UiState {
   newEventRequested: boolean;
   /** Task to open in the tasks view's detail panel (set from the command menu). */
   openTaskId: string | null;
+  /** Library item to open in the Library detail panel (set from the command menu). */
+  openLibraryItemId: string | null;
 }
 
 const INITIAL: UiState = {
@@ -26,6 +28,7 @@ const INITIAL: UiState = {
   quickAddRequested: false,
   newEventRequested: false,
   openTaskId: null,
+  openLibraryItemId: null,
 };
 let state = INITIAL;
 const listeners = new Set<() => void>();
