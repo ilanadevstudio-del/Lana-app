@@ -5,6 +5,7 @@ import {
   CircleCheck,
   FolderKanban,
   Home,
+  Library,
   MessageSquare,
   Plug,
   Settings,
@@ -31,6 +32,7 @@ export const SECONDARY_NAV: NavItem[] = [
   { href: "/integrations", label: "Integrations", icon: Plug, key: "i" },
   { href: "/activity", label: "Activity", icon: Activity, key: "y" },
   { href: "/memory", label: "Memory", icon: Brain, key: "m" },
+  { href: "/library", label: "Library", icon: Library, key: "l" },
 ];
 
 export const SETTINGS_NAV: NavItem = { href: "/settings", label: "Settings", icon: Settings, key: "s" };

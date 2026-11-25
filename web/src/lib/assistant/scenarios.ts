@@ -6,6 +6,10 @@ import { createTask, getTasks, isDueToday, isOverdue, PRIORITY_LABELS } from "@/
 import { getProjects } from "@/lib/data/workspace";
 import { addDays, formatDay, formatTime, formatTimeRange, plural, toDateKey } from "@/lib/format";
 import type { Script } from "./engine";
+import { resolveFromLibrary } from "@/lib/data/library";
+import { extractLibraryQuery } from "@/lib/data/library-resolve";
+import { isLibraryRequest, sendFromLibrary } from "./library-scenario";
+import type { ContextRef } from "./types";
 
 /**
  * Demo scenarios. Matching is keyword-based; the real engine uses the model's tool selection.
@@ -371,6 +375,7 @@ const fallback: Script = async (ctx) => {
       "- Show my open GitHub pull requests\n" +
       "- Merge PR #22\n" +
       "- Email Tobi about a quick call\n" +
+      "- Send my CV to tobi@example.com\n" +
       "- Move my sync with Tobi to Thursday\n" +
       "- Organise my tasks for today\n" +
       "- Prepare for my next meeting\n" +
@@ -379,8 +384,9 @@ const fallback: Script = async (ctx) => {
   );
 };
 
+const simulatedErrorPattern = /simulate (an )?error/i;
+
 const SCENARIOS: [RegExp, Script][] = [
-  [/simulate (an )?error/i, simulatedError],
   [/\bmerge\b/i, githubMerge],
   [/\b(prs?|pull requests?|github)\b/i, githubPrs],
   [/whats\s?app/i, whatsapp],
@@ -396,6 +402,15 @@ const SCENARIOS: [RegExp, Script][] = [
   [/\b(schedule|calendar|today|meetings?|agenda)\b/i, schedule],
 ];
 
-export function pickScenario(input: string): Script {
-  return SCENARIOS.find(([re]) => re.test(input))?.[1] ?? fallback;
+export function pickScenario(input: string, context?: ContextRef[]): Script {
+  if (simulatedErrorPattern.test(input)) return simulatedError;
+  const keyword = SCENARIOS.find(([re]) => re.test(input))?.[1];
+  if (isLibraryRequest(input, context)) {
+    // "Email Tobi about my availability" isn't about the Library: only claim it when the item exists,
+    // was attached with "@", or nothing else understands the request (so "send my cover letter" still says it's missing).
+    const query = extractLibraryQuery(input);
+    const known = context?.some((c) => c.kind === "library") || (query !== null && resolveFromLibrary(query).kind !== "none");
+    if (known || !keyword) return sendFromLibrary;
+  }
+  return keyword ?? fallback;
 }

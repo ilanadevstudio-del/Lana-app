@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Command } from "cmdk";
-import { ArrowUp, AtSign, FileText, FolderKanban, Mic, Paperclip, Square, X } from "lucide-react";
+import { ArrowUp, AtSign, FileText, FolderKanban, LibraryBig, Mic, Paperclip, Square, X } from "lucide-react";
 import { IconButton } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/overlays";
@@ -11,6 +11,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import type { Attachment, ContextRef, SendInput } from "@/lib/assistant/types";
 import { cn } from "@/lib/cn";
 import { integrationName } from "@/lib/data/integration-catalog";
+import { useLibrary } from "@/lib/data/library";
 import { uid } from "@/lib/data/store";
 import type { IntegrationId } from "@/lib/data/types";
 import { useConnections, useProjects } from "@/lib/data/workspace";
@@ -158,6 +159,8 @@ export const Composer = forwardRef<
               icon={
                 c.kind === "integration" ? (
                   <IntegrationLogo id={c.id as IntegrationId} size={14} bare />
+                ) : c.kind === "library" ? (
+                  <LibraryBig className="size-3.5 text-fg-subtle" />
                 ) : (
                   <FolderKanban className="size-3.5 text-fg-subtle" />
                 )
@@ -292,6 +295,7 @@ function Chip({ icon, label, meta, onRemove }: { icon: ReactNode; label: string;
 function ContextPicker({ onPick }: { onPick: (ref: ContextRef) => void }) {
   const connections = useConnections();
   const projects = useProjects();
+  const library = useLibrary();
   const connected = connections?.filter((c) => c.status === "connected") ?? [];
   return (
     <PopoverContent align="start" className="w-72 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
@@ -315,6 +319,20 @@ function ContextPicker({ onPick }: { onPick: (ref: ContextRef) => void }) {
               </PickerItem>
             ))}
           </Command.Group>
+          <Command.Group heading="Library">
+            {library?.map((item) => (
+              <PickerItem
+                key={item.id}
+                value={`${item.name} ${item.aliases.join(" ")}`}
+                disabled={item.sharing === "never"}
+                onSelect={() => onPick({ kind: "library", id: item.id, label: item.name })}
+              >
+                <LibraryBig className="size-4 text-fg-subtle" />
+                <span className="flex-1 truncate">{item.name}</span>
+                {item.sharing === "never" && <span className="text-2xs text-fg-faint">Never shared</span>}
+              </PickerItem>
+            ))}
+          </Command.Group>
           <Command.Group heading="Projects">
             {projects
               ?.filter((p) => p.status !== "completed")
@@ -331,12 +349,13 @@ function ContextPicker({ onPick }: { onPick: (ref: ContextRef) => void }) {
   );
 }
 
-function PickerItem({ children, value, onSelect }: { children: ReactNode; value: string; onSelect: () => void }) {
+function PickerItem({ children, value, onSelect, disabled }: { children: ReactNode; value: string; onSelect: () => void; disabled?: boolean }) {
   return (
     <Command.Item
       value={value}
       onSelect={onSelect}
-      className="flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm text-fg-muted data-[selected=true]:bg-hover data-[selected=true]:text-fg"
+      disabled={disabled}
+      className="flex h-8 cursor-default items-center gap-2.5 rounded-md px-2 text-sm text-fg-muted data-[disabled=true]:opacity-50 data-[selected=true]:bg-hover data-[selected=true]:text-fg"
     >
       {children}
     </Command.Item>

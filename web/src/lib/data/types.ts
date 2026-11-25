@@ -235,6 +235,51 @@ export interface MemoryItem {
   pinned?: boolean;
 }
 
+// ── Library ───────────────────────────────────────────────────────────────────
+
+export type LibraryItemKind = "file" | "link" | "text";
+
+export interface LibraryShare {
+  at: string;
+  to: string;
+  via: IntegrationId;
+  /** The activity record for this share, when there is one. */
+  actionId?: string;
+}
+
+/** A Library item as shown on an approval card, snapshotted when the approval is drafted. */
+export interface LibraryAttachment {
+  libraryItemId: string;
+  kind: LibraryItemKind;
+  name: string;
+  /** "Emmanuel_Ola_CV_2026.pdf · 184 KB", the URL, or "Pasted into the message". */
+  detail: string;
+}
+
+/** Something the user shares repeatedly: a file, a link or a text snippet. */
+export interface LibraryItem {
+  id: string;
+  kind: LibraryItemKind;
+  /** How it's shown, and the main way LANA refers to it: "CV". */
+  name: string;
+  /** Other names that resolve to it: ["resume", "curriculum vitae"]. */
+  aliases: string[];
+  description?: string;
+  /** previewUrl is an object URL for files uploaded this session. */
+  file?: { fileName: string; size: number; mimeType: string; previewUrl?: string };
+  link?: { url: string };
+  text?: { body: string };
+  /** Every share needs approval anyway; "never" means LANA won't use it in any action. */
+  sharing: "ask" | "never";
+  /** Earlier files, newest first. */
+  versions?: { id: string; fileName: string; size: number; replacedAt: string }[];
+  /** Newest first. */
+  shares: LibraryShare[];
+  pinned?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ── People & account ──────────────────────────────────────────────────────────
 
 export interface UserProfile {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, FileText, FolderKanban, RotateCcw } from "lucide-react";
+import { Check, Copy, FileText, FolderKanban, LibraryBig, RotateCcw } from "lucide-react";
 import { ApprovalPanel } from "@/components/lana/approval-panel";
 import { ExecutionTrace } from "@/components/lana/execution-trace";
 import { IntegrationLogo } from "@/components/lana/integration-logo";
@@ -10,7 +10,8 @@ import { Markdown } from "@/components/lana/markdown";
 import { Button, IconButton } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/feedback";
 import { Tooltip } from "@/components/ui/tooltip";
-import { approve, decline, isApprovalPending, retry } from "@/lib/assistant/engine";
+import { approvalBlockReason, approve, decline, isApprovalPending, retry } from "@/lib/assistant/engine";
+import { useLibrary } from "@/lib/data/library";
 import type { Message, Phase } from "@/lib/assistant/types";
 import { cn } from "@/lib/cn";
 import type { IntegrationId } from "@/lib/data/types";
@@ -24,7 +25,13 @@ export function UserMessage({ message }: { message: Message }) {
         <div className="flex max-w-[85%] flex-wrap justify-end gap-1.5">
           {message.context?.map((c) => (
             <span key={c.id} className="inline-flex h-6 items-center gap-1.5 rounded-md border border-line px-2 text-xs text-fg-muted">
-              {c.kind === "integration" ? <IntegrationLogo id={c.id as IntegrationId} size={12} bare /> : <FolderKanban className="size-3" />}
+              {c.kind === "integration" ? (
+                <IntegrationLogo id={c.id as IntegrationId} size={12} bare />
+              ) : c.kind === "library" ? (
+                <LibraryBig className="size-3" />
+              ) : (
+                <FolderKanban className="size-3" />
+              )}
               {c.label}
             </span>
           ))}
@@ -62,6 +69,8 @@ export function AssistantMessage({
   phase: Phase;
   isLast: boolean;
 }) {
+  // Re-render when the Library changes, so a removed attachment disables the approval at once.
+  const library = useLibrary();
   const lastTextIndex = message.parts.map((p) => p.type).lastIndexOf("text");
   const thinking = message.streaming && isLast && PHASE_LABEL[phase];
   const plainText = message.parts
@@ -89,7 +98,9 @@ export function AssistantMessage({
                   confirmLabel={part.action.approval.confirmLabel}
                   decision={part.action.approval.decision}
                   decidedAt={part.action.approval.decidedAt}
+                  attachments={part.action.approval.attachments}
                   disabled={part.action.status === "awaiting_approval" && !isApprovalPending(part.action.id)}
+                  approveBlockedReason={library && part.action.status === "awaiting_approval" ? approvalBlockReason(part.action) : undefined}
                   onApprove={(fields) => approve(convId, message.id, part.action.id, fields)}
                   onDecline={() => decline(convId, message.id, part.action.id)}
                 />
