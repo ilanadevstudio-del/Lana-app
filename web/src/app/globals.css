@@ -1,37 +1,475 @@
 @import "tailwindcss";
 
-/* Base tokens — placeholder palette, to be refined when we design the first screen. */
-:root {
-  --background: #fbfaf8;
-  --foreground: #1a1918;
-  --muted: #6f6b66;
-  --surface: #ffffff;
-  --border: #ebe8e3;
+/*
+ * LANA design tokens.
+ * Dark is the primary theme. `data-theme` on <html> is set before paint by the inline script in app/layout.tsx.
+ * Components only use the semantic tokens exposed through @theme below, never raw hex values.
+ */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* Sidebar collapsed state, set on <html> before paint */
+@custom-variant collapsed (&:where([data-sidebar="collapsed"] *));
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces: canvas → panel → raised → overlay */
+  --canvas: #0b0b0d;
+  --panel: #111114;
+  --raised: #17171b;
+  --overlay: #1b1b20;
+  --hover: rgb(255 255 255 / 0.045);
+  --pressed: rgb(255 255 255 / 0.075);
+
+  /* Lines */
+  --line-subtle: rgb(255 255 255 / 0.06);
+  --line: rgb(255 255 255 / 0.09);
+  --line-strong: rgb(255 255 255 / 0.15);
+
+  /* Text */
+  --fg: #ededf0;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #76767f;
+  --fg-faint: #55555d;
+
+  /* Accent: restrained indigo */
+  --accent: #6e6af5;
+  --accent-hover: #7e7aff;
+  --accent-soft: rgb(110 106 245 / 0.14);
+  --accent-line: rgb(126 122 255 / 0.42);
+  --accent-text: #a5a3ff;
+  --on-accent: #ffffff;
+
+  /* Status */
+  --success: #3db97a;
+  --success-soft: rgb(61 185 122 / 0.13);
+  --warning: #e2a23b;
+  --warning-soft: rgb(226 162 59 / 0.13);
+  --danger: #e5484d;
+  --danger-soft: rgb(229 72 77 / 0.13);
+  --info: #4c8df6;
+  --info-soft: rgb(76 141 246 / 0.13);
+
+  /* Event categories (calendar, projects) */
+  --cat-blue: #4c8df6;
+  --cat-violet: #8b7cf6;
+  --cat-green: #3db97a;
+  --cat-amber: #e2a23b;
+  --cat-rose: #e5617c;
+  --cat-teal: #2fb3b3;
+  --cat-slate: #8a8f98;
+
+  --shadow-popover: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 24px -4px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.3);
+  --shadow-dialog: 0 0 0 1px rgb(255 255 255 / 0.07), 0 24px 64px -12px rgb(0 0 0 / 0.7);
+  --shadow-composer: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 40px -16px rgb(0 0 0 / 0.6);
+  --scrim: rgb(0 0 0 / 0.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #121110;
-    --foreground: #f1efec;
-    --muted: #9a958f;
-    --surface: #1a1918;
-    --border: #2a2826;
-  }
+[data-theme="light"] {
+  color-scheme: light;
+
+  --canvas: #fbfbfc;
+  --panel: #ffffff;
+  --raised: #f4f4f6;
+  --overlay: #ffffff;
+  --hover: rgb(15 15 25 / 0.04);
+  --pressed: rgb(15 15 25 / 0.07);
+
+  --line-subtle: rgb(15 15 25 / 0.06);
+  --line: rgb(15 15 25 / 0.1);
+  --line-strong: rgb(15 15 25 / 0.16);
+
+  --fg: #18181b;
+  --fg-muted: #57575f;
+  --fg-subtle: #7c7c85;
+  --fg-faint: #a5a5ad;
+
+  --accent: #5b57e8;
+  --accent-hover: #4b47d6;
+  --accent-soft: rgb(91 87 232 / 0.1);
+  --accent-line: rgb(91 87 232 / 0.4);
+  --accent-text: #4b47d6;
+  --on-accent: #ffffff;
+
+  --success: #1f9d5c;
+  --success-soft: rgb(31 157 92 / 0.1);
+  --warning: #b97a12;
+  --warning-soft: rgb(226 162 59 / 0.14);
+  --danger: #d1343a;
+  --danger-soft: rgb(209 52 58 / 0.09);
+  --info: #2f6fdc;
+  --info-soft: rgb(47 111 220 / 0.09);
+
+  --cat-blue: #2f6fdc;
+  --cat-violet: #6b5ce7;
+  --cat-green: #1f9d5c;
+  --cat-amber: #c4830f;
+  --cat-rose: #d4466a;
+  --cat-teal: #138f8f;
+  --cat-slate: #6b7079;
+
+  --shadow-popover: 0 0 0 1px rgb(15 15 25 / 0.08), 0 8px 24px -6px rgb(15 15 25 / 0.14), 0 2px 4px rgb(15 15 25 / 0.05);
+  --shadow-dialog: 0 0 0 1px rgb(15 15 25 / 0.08), 0 24px 64px -16px rgb(15 15 25 / 0.25);
+  --shadow-composer: 0 1px 2px rgb(15 15 25 / 0.04), 0 12px 32px -18px rgb(15 15 25 / 0.2);
+  --scrim: rgb(15 15 25 / 0.32);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --font-sans: var(--font-instrument-sans);
-  --font-serif: var(--font-instrument-serif);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-overlay: var(--overlay);
+  --color-hover: var(--hover);
+  --color-pressed: var(--pressed);
+
+  --color-line-subtle: var(--line-subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-faint: var(--fg-faint);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --color-cat-blue: var(--cat-blue);
+  --color-cat-violet: var(--cat-violet);
+  --color-cat-green: var(--cat-green);
+  --color-cat-amber: var(--cat-amber);
+  --color-cat-rose: var(--cat-rose);
+  --color-cat-teal: var(--cat-teal);
+  --color-cat-slate: var(--cat-slate);
+
+  --shadow-popover: var(--shadow-popover);
+  --shadow-dialog: var(--shadow-dialog);
+  --shadow-composer: var(--shadow-composer);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Type scale: 13px is the UI base, 15px is reading text (messages, notes). */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 16px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-md: 15px;
+  --text-md--line-height: 24px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 18px;
+  --text-xl--line-height: 26px;
+  --text-2xl: 22px;
+  --text-2xl--line-height: 30px;
+  --text-3xl: 28px;
+  --text-3xl--line-height: 36px;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+/* Layered so Tailwind utilities (e.g. focus:outline-none) can override these defaults. */
+
+@layer base {
+
+  html {
+    background: var(--canvas);
+  }
+
+  body {
+    background: var(--canvas);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 20px;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-line);
+    outline-offset: 1px;
+  }
+
+  /* Thin, quiet scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+  }
+  [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+/* ── Motion ────────────────────────────────────────────────────────────────── */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+}
+@keyframes pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+/* Positioning uses the separate `translate` property (Tailwind v4), so these only scale and nudge. */
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+}
+@keyframes dialog-out {
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+@keyframes sheet-right-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-right-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-bottom-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-bottom-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-left-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes sheet-left-out {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-line);
+  }
+  100% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes skeleton {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 160ms var(--ease-out) both;
+}
+@utility animate-fade-out {
+  animation: fade-out 120ms ease-in both;
+}
+@utility animate-pop-in {
+  animation: pop-in 140ms var(--ease-out) both;
+}
+@utility animate-pop-out {
+  animation: pop-out 100ms ease-in both;
+}
+@utility animate-dialog-in {
+  animation: dialog-in 180ms var(--ease-out) both;
+}
+@utility animate-dialog-out {
+  animation: dialog-out 120ms ease-in both;
+}
+@utility animate-rise {
+  animation: rise 220ms var(--ease-out) both;
+}
+@utility animate-pulse-ring {
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+@utility animate-skeleton {
+  animation: skeleton 1.6s ease-in-out infinite;
+}
+
+/* Radix content: enter/exit driven by data-state */
+@utility pop-motion {
+  &[data-state="open"],
+  &[data-state="delayed-open"],
+  &[data-state="instant-open"] {
+    animation: pop-in 140ms var(--ease-out) both;
+  }
+  &[data-state="closed"] {
+    animation: pop-out 100ms ease-in both;
+  }
+}
+@utility scrim-motion {
+  &[data-state="open"] {
+    animation: fade-in 160ms var(--ease-out) both;
+  }
+  &[data-state="closed"] {
+    animation: fade-out 120ms ease-in both;
+  }
+}
+@utility dialog-motion {
+  &[data-state="open"] {
+    animation: dialog-in 180ms var(--ease-out) both;
+  }
+  &[data-state="closed"] {
+    animation: dialog-out 120ms ease-in both;
+  }
+}
+@utility sheet-right-motion {
+  &[data-state="open"] {
+    animation: sheet-right-in 240ms var(--ease-out) both;
+  }
+  &[data-state="closed"] {
+    animation: sheet-right-out 180ms ease-in both;
+  }
+}
+@utility sheet-left-motion {
+  &[data-state="open"] {
+    animation: sheet-left-in 240ms var(--ease-out) both;
+  }
+  &[data-state="closed"] {
+    animation: sheet-left-out 180ms ease-in both;
+  }
+}
+@utility sheet-bottom-motion {
+  &[data-state="open"] {
+    animation: sheet-bottom-in 260ms var(--ease-out) both;
+  }
+  &[data-state="closed"] {
+    animation: sheet-bottom-out 180ms ease-in both;
+  }
+}
+
+/* "Working…" label: a soft light passing over muted text */
+@utility shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--fg-subtle) 0%,
+    var(--fg-subtle) 40%,
+    var(--fg) 50%,
+    var(--fg-subtle) 60%,
+    var(--fg-subtle) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Blinking caret after the last streamed block */
+.streaming-caret > :last-child::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 15px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  border-radius: 1px;
+  background: var(--fg-muted);
+  animation: caret 1s steps(1) infinite;
+}
+
+/* Syntax highlighting (sugar-high) */
+:root,
+[data-theme="dark"] {
+  --sh-class: #8fb4ff;
+  --sh-identifier: #d4d4d8;
+  --sh-sign: #8b8b94;
+  --sh-property: #a5a3ff;
+  --sh-entity: #7dd3c0;
+  --sh-jsxliterals: #d4d4d8;
+  --sh-string: #9fd49f;
+  --sh-keyword: #f0a3c4;
+  --sh-comment: #6b6b75;
+}
+[data-theme="light"] {
+  --sh-class: #2f6fdc;
+  --sh-identifier: #27272a;
+  --sh-sign: #71717a;
+  --sh-property: #5b57e8;
+  --sh-entity: #138f8f;
+  --sh-jsxliterals: #27272a;
+  --sh-string: #1f8a4c;
+  --sh-keyword: #c0336e;
+  --sh-comment: #9a9aa3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
