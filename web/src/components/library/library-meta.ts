@@ -32,3 +32,14 @@ export function secondaryLine(item: LibraryItem): string {
   const text = (item.text?.body ?? "").replace(/\s+/g, " ").trim();
   return text.length > 80 ? `${text.slice(0, 80)}…` : text;
 }
+
+/** How the detail panel previews an item. Files only preview when this session has their bytes. */
+export function previewMode(item: LibraryItem): "image" | "pdf" | "sample" | "unsupported" | "link" | "text" {
+  if (item.kind === "link") return "link";
+  if (item.kind === "text") return "text";
+  const f = item.file;
+  if (!f?.previewUrl) return "sample";
+  if (f.mimeType.startsWith("image/")) return "image";
+  if (f.mimeType === "application/pdf") return "pdf";
+  return "unsupported";
+}

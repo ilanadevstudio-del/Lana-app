@@ -14,6 +14,7 @@ import { deleteLibraryItem, restoreLibraryItem, updateLibraryItem, useLibrary } 
 import type { LibraryItem, LibraryItemKind } from "@/lib/data/types";
 import { setUi, useUi } from "@/lib/ui-state";
 import { useNow } from "@/lib/use-now";
+import { LibraryDetail } from "./library-detail";
 import { LibraryItemDialog } from "./library-item-dialog";
 import { LibraryRow } from "./library-row";
 
@@ -68,6 +69,7 @@ export function LibraryView() {
         .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.updatedAt.localeCompare(a.updatedAt)) ?? null,
     [searched, filter],
   );
+  const selected = items?.find((i) => i.id === selectedId) ?? null;
   const count = (k: KindFilter) => (k === "all" ? searched?.length : searched?.filter((i) => i.kind === k).length) ?? 0;
 
   async function copy(item: LibraryItem) {
@@ -150,7 +152,20 @@ export function LibraryView() {
           </nav>
         </PageToolbar>
 
-        <SplitView asideTitle="Item" onAsideClose={() => setSelectedId(null)}>
+        <SplitView
+          asideTitle="Item"
+          onAsideClose={() => setSelectedId(null)}
+          aside={
+            selected && (
+              <LibraryDetail
+                item={selected}
+                onEdit={() => setDialog({ mode: "edit", item: selected })}
+                onReplace={() => setDialog({ mode: "edit", item: selected, replaceFile: true })}
+                onDelete={() => setDeleting(selected)}
+              />
+            )
+          }
+        >
           <div className="px-4 pt-3 sm:hidden">
             <Input icon={<Search />} placeholder="Search library" aria-label="Search library" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>

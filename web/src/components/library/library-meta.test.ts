@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { LibraryItem } from "@/lib/data/types";
-import { recipientLabel, secondaryLine, shareSummary } from "./library-meta";
+import { previewMode, recipientLabel, secondaryLine, shareSummary } from "./library-meta";
 
 const NOW = new Date("2026-11-25T12:00:00Z");
 const item = (patch: Partial<LibraryItem>): LibraryItem => ({
@@ -58,5 +58,18 @@ describe("secondaryLine", () => {
     expect(line.startsWith("Line one line two ")).toBe(true);
     expect(line.length).toBe(81);
     expect(line.endsWith("…")).toBe(true);
+  });
+});
+
+describe("previewMode", () => {
+  const f = (mimeType: string, previewUrl?: string) => item({ file: { fileName: "x", size: 1, mimeType, previewUrl } });
+  test("uploaded images preview as images", () => expect(previewMode(f("image/png", "blob:1"))).toBe("image"));
+  test("uploaded PDFs preview in a frame", () => expect(previewMode(f("application/pdf", "blob:2"))).toBe("pdf"));
+  test("uploaded Word documents get a tile", () =>
+    expect(previewMode(f("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "blob:3"))).toBe("unsupported"));
+  test("sample files without a binary get a tile", () => expect(previewMode(f("application/pdf"))).toBe("sample"));
+  test("links and text", () => {
+    expect(previewMode(item({ kind: "link", link: { url: "https://a.b" } }))).toBe("link");
+    expect(previewMode(item({ kind: "text", text: { body: "x" } }))).toBe("text");
   });
 });
