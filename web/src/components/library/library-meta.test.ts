@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { LibraryItem } from "@/lib/data/types";
-import { previewMode, recipientLabel, secondaryLine, shareSummary } from "./library-meta";
+import { itemPhrase, previewMode, recipientLabel, secondaryLine, shareSummary } from "./library-meta";
 
 const NOW = new Date("2026-11-25T12:00:00Z");
 const item = (patch: Partial<LibraryItem>): LibraryItem => ({
@@ -71,5 +71,17 @@ describe("previewMode", () => {
   test("links and text", () => {
     expect(previewMode(item({ kind: "link", link: { url: "https://a.b" } }))).toBe("link");
     expect(previewMode(item({ kind: "text", text: { body: "x" } }))).toBe("text");
+  });
+});
+
+describe("itemPhrase", () => {
+  test("keeps acronyms and brand casing", () => {
+    expect(itemPhrase("CV")).toBe("CV");
+    expect(itemPhrase("EventFi pitch deck")).toBe("EventFi pitch deck");
+    expect(itemPhrase("LinkedIn")).toBe("LinkedIn");
+  });
+  test("lowercases ordinary capitalised words", () => {
+    expect(itemPhrase("Short bio")).toBe("short bio");
+    expect(itemPhrase("Passport scan")).toBe("passport scan");
   });
 });

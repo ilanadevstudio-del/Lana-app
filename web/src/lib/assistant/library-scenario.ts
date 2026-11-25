@@ -1,6 +1,6 @@
 "use client";
 
-import { recipientLabel } from "@/components/library/library-meta";
+import { itemPhrase, recipientLabel } from "@/components/library/library-meta";
 import { addActivityRecord } from "@/lib/data/activity";
 import { getLibrary, recordShare, resolveFromLibrary } from "@/lib/data/library";
 import { extractLibraryQuery, type LibraryResolution } from "@/lib/data/library-resolve";
@@ -33,8 +33,8 @@ function draftBody(item: LibraryItem, to: string) {
   const sender = getUser().firstName;
   const hello = `Hi ${recipientLabel(to)},`;
   if (item.kind === "text") return `${hello}\n\n${item.text!.body}\n\n${sender}`;
-  if (item.kind === "link") return `${hello}\n\nHere's my ${item.name.toLowerCase()}: ${item.link!.url}\n\n${sender}`;
-  return `${hello}\n\nPlease find my ${item.name.toLowerCase()} attached.\n\n${sender}`;
+  if (item.kind === "link") return `${hello}\n\nHere's my ${itemPhrase(item.name)}: ${item.link!.url}\n\n${sender}`;
+  return `${hello}\n\nPlease find my ${itemPhrase(item.name)} attached.\n\n${sender}`;
 }
 
 function resolveRequest(input: string, context?: ContextRef[]): { query: string; result: LibraryResolution } | null {
@@ -54,18 +54,20 @@ export const sendFromLibrary: Script = async (ctx, input, context) => {
     return;
   }
   const { query, result } = resolved;
+  /** How the item is named in step labels: the item's own casing once found, otherwise what the user typed. */
+  const label = result.kind === "match" || result.kind === "blocked" ? itemPhrase(result.item.name) : query;
   const to = parseRecipient(input);
 
   if (result.kind === "match" && !to) {
-    await ctx.say(`Who should I send your ${result.item.name.toLowerCase()} to? An email address works best.`);
+    await ctx.say(`Who should I send your ${itemPhrase(result.item.name)} to? An email address works best.`);
     return;
   }
 
-  const title = result.kind === "match" ? `Send ${result.item.name} to ${to}` : `Send “my ${query}”`;
+  const title = result.kind === "match" ? `Send ${result.item.name} to ${to}` : `Send “my ${label}”`;
   const a = ctx.action({
     app: "gmail",
     title,
-    steps: [`Find “my ${query}” in your Library`, "Draft the email", "Wait for your approval", "Send with Gmail", "Confirm delivery"],
+    steps: [`Find “my ${label}” in your Library`, "Draft the email", "Wait for your approval", "Send with Gmail", "Confirm delivery"],
   });
   a.step(0, "running");
   await ctx.wait(600);
@@ -77,7 +79,7 @@ export const sendFromLibrary: Script = async (ctx, input, context) => {
       failRest();
       a.patch({ status: "cancelled", finishedAt: new Date().toISOString() });
       await ctx.say(
-        `Your ${result.item.name.toLowerCase()} is set to never share, so I won't send it. You can change that in the [Library](/library), or attach it yourself.`,
+        `Your ${itemPhrase(result.item.name)} is set to never share, so I won't send it. You can change that in the [Library](/library), or attach it yourself.`,
       );
       return;
     }
@@ -111,7 +113,7 @@ export const sendFromLibrary: Script = async (ctx, input, context) => {
     { key: "subject", label: "Subject", value: `${item.name} — ${getUser().firstName} ${getUser().lastName}`, editable: true },
     { key: "body", label: "Message", value: draftBody(item, to!), editable: true, multiline: true },
   ];
-  await ctx.say(`Here's the email with your ${item.name.toLowerCase()}. Check it over; I'll send it once you approve.`);
+  await ctx.say(`Here's the email with your ${itemPhrase(item.name)}. Check it over; I'll send it once you approve.`);
   a.requestApproval(
     fields,
     "Send email",
@@ -129,7 +131,7 @@ export const sendFromLibrary: Script = async (ctx, input, context) => {
           summary: `Delivered to ${values.to}`,
           status: "succeeded",
           steps: [
-            { id: "s0", label: `Find “my ${query}” in your Library`, state: "done", detail: item.file?.fileName ?? item.name },
+            { id: "s0", label: `Find “my ${label}” in your Library`, state: "done", detail: item.file?.fileName ?? item.name },
             { id: "s1", label: "Draft the email", state: "done" },
             { id: "s2", label: "Wait for your approval", state: "done", detail: "Approved by you" },
             { id: "s3", label: "Send with Gmail", state: "done" },
@@ -139,11 +141,11 @@ export const sendFromLibrary: Script = async (ctx, input, context) => {
           createdAt: at,
           finishedAt: at,
           decidedAt: at,
-          origin: { kind: "conversation", label: `Send my ${query}` },
+          origin: { kind: "conversation", label: `Send my ${label}` },
           simulated: true,
         });
         action.finish({ verified: true, summary: `Delivered to ${values.to}` });
-        await ctx.say(`Sent. Gmail confirmed delivery of your ${item.name.toLowerCase()} to **${values.to}**.`);
+        await ctx.say(`Sent. Gmail confirmed delivery of your ${itemPhrase(item.name)} to **${values.to}**.`);
       },
       async onDecline(ctx) {
         await ctx.say("Okay, I didn't send anything.");

@@ -15,7 +15,7 @@ import type { LibraryItem } from "@/lib/data/types";
 import { formatBytes, formatRelative, formatShortDate } from "@/lib/format";
 import { ItemTile } from "./item-tile";
 import { SHARING_HINT } from "./library-item-dialog";
-import { previewMode, recipientLabel } from "./library-meta";
+import { itemPhrase, previewMode, recipientLabel } from "./library-meta";
 
 /** Everything about one Library item: preview, names LANA knows, sharing, versions and where it went. */
 export function LibraryDetail({
@@ -225,10 +225,10 @@ function Aliases({ item }: { item: LibraryItem }) {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="inline-flex h-6 items-center rounded bg-raised px-2 text-xs font-medium text-fg">“my {item.name.toLowerCase()}”</span>
+      <span className="inline-flex h-6 items-center rounded bg-raised px-2 text-xs font-medium text-fg">“my {itemPhrase(item.name)}”</span>
       {item.aliases.map((a) => (
         <span key={a} className="inline-flex h-6 items-center gap-1 rounded bg-raised pl-2 pr-0.5 text-xs text-fg">
-          “my {a.toLowerCase()}”
+          “my {itemPhrase(a)}”
           <button
             type="button"
             aria-label={`Remove ${a}`}

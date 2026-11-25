@@ -43,3 +43,11 @@ export function previewMode(item: LibraryItem): "image" | "pdf" | "sample" | "un
   if (f.mimeType === "application/pdf") return "pdf";
   return "unsupported";
 }
+
+/** An item name for use mid-sentence: "Short bio" → "short bio", but "CV", "EventFi" and "LinkedIn" keep their casing. */
+export function itemPhrase(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => (/^[A-Z][a-z]+$/.test(w) ? w.toLowerCase() : w))
+    .join(" ");
+}

@@ -166,7 +166,7 @@ export function LibraryView() {
             )
           }
         >
-          <div className="px-4 pt-3 sm:hidden">
+          <div className="px-4 pb-2 pt-3 sm:hidden">
             <Input icon={<Search />} placeholder="Search library" aria-label="Search library" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
           {!shown || !now ? (
