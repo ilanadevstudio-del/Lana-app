@@ -44,14 +44,12 @@ export function ItemTile({ item, size = 32, className }: { item: LibraryItem; si
   }
 
   return (
-    <span
-      aria-hidden
-      className={cn("relative grid shrink-0 place-items-center overflow-hidden border border-line bg-raised", className)}
-      style={{ width: size, height: size, borderRadius: radius }}
-    >
-      {body}
+    <span aria-hidden className={cn("relative shrink-0", className)} style={{ width: size, height: size }}>
+      <span className="grid size-full place-items-center overflow-hidden border border-line bg-raised" style={{ borderRadius: radius }}>
+        {body}
+      </span>
       {item.sharing === "never" && (
-        <span className="absolute -bottom-px -right-px grid size-3.5 place-items-center rounded-tl-[4px] bg-overlay text-fg-muted ring-1 ring-line">
+        <span className="absolute -bottom-1 -right-1 grid size-4 place-items-center rounded-full bg-overlay text-fg-muted ring-1 ring-line-strong">
           <Lock className="size-2.5" strokeWidth={2.4} />
         </span>
       )}

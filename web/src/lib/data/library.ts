@@ -15,7 +15,7 @@ const store = createStore<LibraryItem[]>(seedLibrary);
 export const useLibrary = store.use;
 export const getLibrary = store.get;
 
-export const MAX_LIBRARY_FILE_BYTES = 10 * 1024 * 1024;
+export { MAX_LIBRARY_FILE_BYTES } from "./library-validate";
 /** How long a deleted item can be restored before its preview URL is released. */
 const UNDO_WINDOW_MS = 7000;
 

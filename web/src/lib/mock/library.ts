@@ -64,7 +64,7 @@ export function seedLibrary(): LibraryItem[] {
       },
       sharing: "ask",
       shares: [
-        { at: hoursAgo(26), to: "events@cchub.example", via: "gmail" },
+        { at: hoursAgo(26), to: "tolu.adeyemi@cchub.example", via: "gmail" },
         { at: daysAgo(11), to: "kemi.bello@example.com", via: "gmail" },
         { at: daysAgo(30), to: "#general", via: "slack" },
       ],

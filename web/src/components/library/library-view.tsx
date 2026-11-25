@@ -14,6 +14,7 @@ import { deleteLibraryItem, restoreLibraryItem, updateLibraryItem, useLibrary } 
 import type { LibraryItem, LibraryItemKind } from "@/lib/data/types";
 import { setUi, useUi } from "@/lib/ui-state";
 import { useNow } from "@/lib/use-now";
+import { LibraryItemDialog } from "./library-item-dialog";
 import { LibraryRow } from "./library-row";
 
 type KindFilter = "all" | LibraryItemKind;
@@ -43,7 +44,7 @@ export function LibraryView() {
   const [filter, setFilter] = useState<KindFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [, setDialog] = useState<LibraryDialogState>(null);
+  const [dialog, setDialog] = useState<LibraryDialogState>(null);
   const [deleting, setDeleting] = useState<LibraryItem | null>(null);
   const [dragging, setDragging] = useState(false);
   const dragDepth = useRef(0);
@@ -216,6 +217,7 @@ export function LibraryView() {
         )}
       </div>
 
+      <LibraryItemDialog state={dialog} onClose={() => setDialog(null)} onSaved={setSelectedId} />
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
