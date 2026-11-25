@@ -1,17 +1,12 @@
-import type { Metadata } from "next";
-import { Geist_Mono, Instrument_Sans, Instrument_Serif } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono, Urbanist } from "next/font/google";
+import { Backdrop } from "@/components/backdrop";
+import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
-const sans = Instrument_Sans({
-  variable: "--font-instrument-sans",
+const sans = Urbanist({
+  variable: "--font-urbanist",
   subsets: ["latin"],
-});
-
-const serif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
 });
 
 const mono = Geist_Mono({
@@ -24,13 +19,31 @@ export const metadata: Metadata = {
   description: "Your personal AI assistant. Less managing. More doing.",
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f0ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0a1c" },
+  ],
+};
+
+// Runs before first paint: saved preference wins, otherwise follow the OS.
+const themeScript = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${serif.variable} ${mono.variable} h-full antialiased`}
+      data-theme="light"
+      suppressHydrationWarning
+      className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-full">
+        <Backdrop />
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,37 +1,166 @@
 @import "tailwindcss";
 
-/* Base tokens — placeholder palette, to be refined when we design the first screen. */
-:root {
-  --background: #fbfaf8;
-  --foreground: #1a1918;
-  --muted: #6f6b66;
-  --surface: #ffffff;
-  --border: #ebe8e3;
+/* Dark mode is driven by data-theme on <html> (set before paint by the inline script in layout.tsx). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Ink */
+  --foreground: #1e1733;
+  --muted: #6f6787;
+  --subtle: #a29bb8;
+
+  /* Canvas — soft lavender → pink → sky */
+  --background: #f5f0ff;
+  --blob-1: #e6d8ff;
+  --blob-2: #ffd6ef;
+  --blob-3: #d6e6ff;
+
+  /* Frosted glass */
+  --glass: rgb(255 255 255 / 0.55);
+  --glass-strong: rgb(255 255 255 / 0.78);
+  --glass-border: rgb(255 255 255 / 0.85);
+  --glass-shadow: 0 1px 1px rgb(80 50 140 / 0.04), 0 12px 32px -8px rgb(110 70 190 / 0.14);
+  --hairline: rgb(30 23 51 / 0.07);
+
+  /* Brand */
+  --accent: #7c5cff;
+  --accent-2: #e15fc7;
+  --accent-soft: rgb(124 92 255 / 0.12);
+
+  /* Status */
+  --success: #16a36a;
+  --warning: #d98a0b;
+  --danger: #e0435a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #121110;
-    --foreground: #f1efec;
-    --muted: #9a958f;
-    --surface: #1a1918;
-    --border: #2a2826;
-  }
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --foreground: #f2eefc;
+  --muted: #a49cbd;
+  --subtle: #6d6585;
+
+  /* Canvas — deep plum night */
+  --background: #0e0a1c;
+  --blob-1: #2b1856;
+  --blob-2: #3d1043;
+  --blob-3: #10224d;
+
+  --glass: rgb(255 255 255 / 0.05);
+  --glass-strong: rgb(255 255 255 / 0.09);
+  --glass-border: rgb(255 255 255 / 0.09);
+  --glass-shadow: 0 1px 1px rgb(0 0 0 / 0.2), 0 16px 40px -12px rgb(0 0 0 / 0.55);
+  --hairline: rgb(255 255 255 / 0.07);
+
+  --accent: #a48dff;
+  --accent-2: #f285db;
+  --accent-soft: rgb(164 141 255 / 0.16);
+
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #fb7185;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --font-sans: var(--font-instrument-sans);
-  --font-serif: var(--font-instrument-serif);
+  --color-subtle: var(--subtle);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-border: var(--glass-border);
+  --color-hairline: var(--hairline);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-urbanist);
   --font-mono: var(--font-geist-mono);
 }
+
+/* ── Utilities ─────────────────────────────────────────────────────────────── */
+
+@utility glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+}
+
+@utility glass-strong {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 90%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility bg-brand {
+  background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 400ms ease, color 400ms ease;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* Slow drift for the background blobs */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) scale(1.08);
+  }
+}
+
+/* Staggered entrance for cards; pair with an inline animation-delay */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
