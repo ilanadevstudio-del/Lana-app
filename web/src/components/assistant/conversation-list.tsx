@@ -1,76 +1,200 @@
 "use client";
 
-import { NotePencilIcon } from "@phosphor-icons/react";
-import { motion } from "motion/react";
-import type { Conversation, MessagePart } from "@/lib/assistant/types";
+import { Suspense, useMemo, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { MoreHorizontal, Pencil, Search, SquarePen, Trash2 } from "lucide-react";
+import { buttonStyles, IconButton } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/feedback";
+import { Input } from "@/components/ui/input";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { Dialog } from "@/components/ui/overlays";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
+import { deleteConversation, renameConversation, useConversations } from "@/lib/assistant/store";
+import type { Conversation } from "@/lib/assistant/types";
+import { cn } from "@/lib/cn";
+import { dayDiff } from "@/lib/format";
 
-function preview(c: Conversation) {
-  const last = c.messages.at(-1);
-  if (!last) return "New conversation";
-  const part: MessagePart | undefined = last.parts.findLast((p) => p.type === "text") ?? last.parts.at(-1);
-  if (!part) return "…";
-  return part.type === "text" ? part.text.replace(/[*`]|\[|\]\([^)]*\)/g, "") : part.action.title;
+function groupLabel(iso: string) {
+  const d = dayDiff(iso);
+  if (d === 0) return "Today";
+  if (d === -1) return "Yesterday";
+  if (d > -7) return "Previous 7 days";
+  if (d > -30) return "Previous 30 days";
+  return "Older";
 }
 
-interface ConversationListProps {
-  conversations: Conversation[];
-  activeId: string | null;
-  onSelect(id: string): void;
-  onNew(): void;
+/**
+ * Conversation history with search, grouped by recency.
+ * The active id comes from route params, which stream in after prerendering (see WithPathname).
+ */
+export function ConversationList({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <Suspense fallback={<List activeId={null} onNavigate={onNavigate} />}>
+      <ListWithParams onNavigate={onNavigate} />
+    </Suspense>
+  );
 }
 
-export function ConversationList({ conversations, activeId, onSelect, onNew }: ConversationListProps) {
+function ListWithParams({ onNavigate }: { onNavigate?: () => void }) {
+  const params = useParams<{ id?: string }>();
+  return <List activeId={params.id ?? null} onNavigate={onNavigate} />;
+}
+
+function List({ activeId, onNavigate }: { activeId: string | null; onNavigate?: () => void }) {
+  const conversations = useConversations();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [renaming, setRenaming] = useState<Conversation | null>(null);
+
+  const groups = useMemo(() => {
+    if (!conversations) return null;
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? conversations.filter(
+          (c) =>
+            c.title.toLowerCase().includes(q) ||
+            c.messages.some((m) => m.parts.some((p) => p.type === "text" && p.text.toLowerCase().includes(q))),
+        )
+      : conversations;
+    const out: { label: string; items: Conversation[] }[] = [];
+    for (const c of filtered) {
+      const label = groupLabel(c.updatedAt);
+      const g = out.find((x) => x.label === label);
+      if (g) g.items.push(c);
+      else out.push({ label, items: [c] });
+    }
+    return out;
+  }, [conversations, query]);
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between px-2 pb-3 pt-1">
-        <h2 className="text-lg font-semibold tracking-tight">Conversations</h2>
-        <motion.button
-          type="button"
-          onClick={onNew}
-          whileTap={{ scale: 0.92 }}
-          aria-label="New chat"
-          title="New chat"
-          className="bg-brand grid size-9 place-items-center rounded-full text-white shadow-[0_8px_18px_-8px_var(--accent)]"
-        >
-          <NotePencilIcon size={17} weight="bold" />
-        </motion.button>
+      <div className="flex flex-col gap-2 p-2">
+        <Link href="/assistant" onClick={onNavigate} className={buttonStyles({ variant: "secondary", className: "w-full justify-start" })}>
+          <SquarePen />
+          New conversation
+        </Link>
+        <Input
+          icon={<Search />}
+          size="sm"
+          placeholder="Search conversations"
+          aria-label="Search conversations"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </div>
-
-      <ul className="-mx-1 flex flex-1 flex-col gap-1 overflow-y-auto px-1">
-        {conversations.map((c) => {
-          const active = c.id === activeId;
-          return (
-            <motion.li key={c.id} layout transition={{ type: "spring", stiffness: 400, damping: 36 }}>
-              <button
-                type="button"
-                onClick={() => onSelect(c.id)}
-                aria-current={active ? "true" : undefined}
-                className={`relative w-full rounded-2xl px-3 py-2.5 text-left transition-colors ${
-                  active ? "" : "hover:bg-glass"
-                }`}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="conversation-active"
-                    className="glass-strong absolute inset-0 rounded-2xl"
-                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                  />
-                )}
-                <span className="relative flex items-center gap-2">
-                  <span className="truncate text-sm font-semibold">{c.title}</span>
-                  {c.busy && <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-accent" />}
-                  {!c.busy && c.orb === "awaiting_approval" && (
-                    <span className="shrink-0 rounded-full bg-accent-soft px-1.5 text-[10px] font-bold uppercase tracking-wide text-accent">
-                      Approve
-                    </span>
-                  )}
-                </span>
-                <span className="relative mt-0.5 block truncate text-xs text-muted">{preview(c)}</span>
-              </button>
-            </motion.li>
-          );
-        })}
-      </ul>
+      <nav aria-label="Conversation history" className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+        {!groups ? (
+          <div className="flex flex-col gap-2 p-2">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-6" />
+            ))}
+          </div>
+        ) : groups.length === 0 ? (
+          <p className="px-2 py-6 text-center text-xs text-fg-subtle">{query ? "No conversations match." : "No conversations yet."}</p>
+        ) : (
+          groups.map((g) => (
+            <div key={g.label} className="mt-2">
+              <p className="px-2 pb-1 text-2xs font-medium text-fg-faint">{g.label}</p>
+              <ul className="flex flex-col gap-px">
+                {g.items.map((c) => {
+                  const active = activeId === c.id;
+                  return (
+                    <li key={c.id} className="group/item relative">
+                      <Link
+                        href={`/assistant/${c.id}`}
+                        onClick={onNavigate}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "flex h-8 items-center gap-2 rounded-md pl-2 pr-8 text-sm transition-colors",
+                          active ? "bg-pressed text-fg" : "text-fg-muted hover:bg-hover hover:text-fg",
+                        )}
+                      >
+                        {c.busy && <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-accent" aria-label="Working" />}
+                        {c.phase === "awaiting_approval" && <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-label="Needs approval" />}
+                        <span className="truncate">{c.title}</span>
+                      </Link>
+                      <Menu>
+                        <MenuTrigger asChild>
+                          <IconButton
+                            label={`Options for ${c.title}`}
+                            size="sm"
+                            className="absolute right-0.5 top-0.5 opacity-0 focus-visible:opacity-100 group-hover/item:opacity-100 data-[state=open]:opacity-100 max-md:opacity-100"
+                          >
+                            <MoreHorizontal />
+                          </IconButton>
+                        </MenuTrigger>
+                        <MenuContent align="end" className="min-w-40">
+                          <MenuItem icon={<Pencil />} onSelect={() => setRenaming(c)}>
+                            Rename
+                          </MenuItem>
+                          <MenuItem
+                            icon={<Trash2 />}
+                            danger
+                            onSelect={() => {
+                              deleteConversation(c.id);
+                              toast({ title: "Conversation deleted" });
+                              if (active) router.push("/assistant");
+                            }}
+                          >
+                            Delete
+                          </MenuItem>
+                        </MenuContent>
+                      </Menu>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
+        )}
+      </nav>
+      <RenameDialog conversation={renaming} onClose={() => setRenaming(null)} />
     </div>
+  );
+}
+
+function RenameDialog({ conversation, onClose }: { conversation: Conversation | null; onClose: () => void }) {
+  const [title, setTitle] = useState("");
+  return (
+    <Dialog
+      open={!!conversation}
+      onOpenChange={(o) => !o && onClose()}
+      title="Rename conversation"
+      size="sm"
+      footer={
+        <>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            variant="primary"
+            disabled={!title.trim()}
+            onClick={() => {
+              if (conversation) renameConversation(conversation.id, title.trim());
+              onClose();
+            }}
+          >
+            Save
+          </Button>
+        </>
+      }
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (conversation && title.trim()) renameConversation(conversation.id, title.trim());
+          onClose();
+        }}
+      >
+        <Input
+          key={conversation?.id}
+          autoFocus
+          aria-label="Conversation title"
+          defaultValue={conversation?.title}
+          onChange={(e) => setTitle(e.target.value)}
+          onFocus={(e) => setTitle(e.target.value)}
+        />
+      </form>
+    </Dialog>
   );
 }

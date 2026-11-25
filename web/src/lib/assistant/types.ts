@@ -1,43 +1,42 @@
-import type { ActionState, AppId, OrbState } from "@/lib/types";
+import type { ActionField, ActionLink, ActionStatus, ActionStep, IntegrationId } from "@/lib/data/types";
 
-/** An action can also be cancelled: declined by the user or stopped mid-run. */
-export type RunState = ActionState | "cancelled";
+/** What LANA is doing right now in a conversation. Drives the header status and the thinking indicator. */
+export type Phase = "idle" | "understanding" | "planning" | "responding" | "executing" | "awaiting_approval";
 
-export type StepState = "pending" | "running" | "done" | "failed";
-
-export interface ActionStep {
-  id: string;
-  label: string;
-  state: StepState;
-  detail?: string;
-}
-
-export interface ApprovalField {
-  key: string;
-  label: string;
-  value: string;
-  editable?: boolean;
-  multiline?: boolean;
-}
-
-export interface ActionLink {
-  label: string;
-  href: string;
-}
-
-/** One tool execution shown in the thread (PRD §5.6). Also the shape of an action-history record (PRD §5.9). */
+/** One tool execution shown inline in the thread. Same shape as an activity record's core. */
 export interface ActionRun {
   id: string;
-  app: AppId;
+  integrationId: IntegrationId;
   title: string;
-  state: RunState;
+  status: ActionStatus;
   steps: ActionStep[];
   approval?: {
-    fields: ApprovalField[];
+    fields: ActionField[];
+    /** Verb for the confirm button, e.g. "Send email". */
+    confirmLabel: string;
     decision?: "approved" | "declined";
+    decidedAt?: string;
   };
+  summary?: string;
   error?: { message: string; cta?: ActionLink };
   links?: ActionLink[];
+  startedAt: string;
+  finishedAt?: string;
+  /** The demo engine never calls real services. */
+  simulated: boolean;
+}
+
+export interface Attachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+}
+
+export interface ContextRef {
+  kind: "integration" | "project";
+  id: string;
+  label: string;
 }
 
 export type MessagePart = { type: "text"; text: string } | { type: "action"; action: ActionRun };
@@ -46,21 +45,30 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   parts: MessagePart[];
+  createdAt: string;
   streaming?: boolean;
+  attachments?: Attachment[];
+  context?: ContextRef[];
+  /** Set when the response failed before completing; the UI offers retry. */
+  error?: string;
 }
 
 export interface Conversation {
   id: string;
   title: string;
   messages: Message[];
-  /** Lana's current state in this conversation. Drives the orb and the header label. */
-  orb: OrbState;
-  /** True while Lana is responding or executing; the composer shows Stop. */
+  phase: Phase;
   busy: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AssistantState {
   conversations: Conversation[];
-  /** null = the "new chat" screen. */
-  activeId: string | null;
+}
+
+export interface SendInput {
+  text: string;
+  attachments?: Attachment[];
+  context?: ContextRef[];
 }

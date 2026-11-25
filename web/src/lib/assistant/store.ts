@@ -1,49 +1,29 @@
-import { useSyncExternalStore } from "react";
-import { SEED_STATE } from "./seed";
-import type { ActionRun, AssistantState, Conversation, Message } from "./types";
+"use client";
+
+import { createStore } from "@/lib/data/store";
+import { seedConversations } from "./seed";
+import type { ActionRun, Conversation, Message } from "./types";
 
 /**
- * Minimal client store for conversations.
- *
- * Lives at module level, so it survives client-side navigation and resets on reload.
- * This is a stand-in until conversations are persisted in Supabase (FR-003).
+ * Conversation store. Lives at module level, so it survives client-side navigation and resets on reload.
+ * PREVIEW: stands in for persisted conversations until the backend exists.
  */
+const store = createStore<Conversation[]>(seedConversations);
 
-let state: AssistantState = SEED_STATE;
-const listeners = new Set<() => void>();
+export const useConversations = store.use;
+export const getConversations = store.get;
+export const setConversations = store.set;
 
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+export function findConversation(id: string) {
+  return store.get().find((c) => c.id === id);
 }
-
-export function getState() {
-  return state;
-}
-
-export function setState(update: (s: AssistantState) => AssistantState) {
-  state = update(state);
-  listeners.forEach((l) => l());
-}
-
-export function useAssistant(): AssistantState {
-  return useSyncExternalStore(subscribe, getState, () => SEED_STATE);
-}
-
-// ── Immutable update helpers ──────────────────────────────────────────────────
 
 export function updateConversation(id: string, fn: (c: Conversation) => Conversation) {
-  setState((s) => ({
-    ...s,
-    conversations: s.conversations.map((c) => (c.id === id ? fn(c) : c)),
-  }));
+  store.set((list) => list.map((c) => (c.id === id ? fn(c) : c)));
 }
 
 export function updateMessage(convId: string, msgId: string, fn: (m: Message) => Message) {
-  updateConversation(convId, (c) => ({
-    ...c,
-    messages: c.messages.map((m) => (m.id === msgId ? fn(m) : m)),
-  }));
+  updateConversation(convId, (c) => ({ ...c, messages: c.messages.map((m) => (m.id === msgId ? fn(m) : m)) }));
 }
 
 export function updateAction(convId: string, msgId: string, actionId: string, fn: (a: ActionRun) => ActionRun) {
@@ -53,6 +33,10 @@ export function updateAction(convId: string, msgId: string, actionId: string, fn
   }));
 }
 
-export function findConversation(id: string) {
-  return state.conversations.find((c) => c.id === id);
+export function deleteConversation(id: string) {
+  store.set((list) => list.filter((c) => c.id !== id));
+}
+
+export function renameConversation(id: string, title: string) {
+  updateConversation(id, (c) => ({ ...c, title }));
 }

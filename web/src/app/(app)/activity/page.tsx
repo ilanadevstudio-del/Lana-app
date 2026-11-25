@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { PlaceholderPage } from "@/components/shell/placeholder-page";
 
 export default function Page() {
-  return <ComingSoon title="Activity" description="Everything Lana has done, with its status, results and approvals." />;
+  return <PlaceholderPage title="Activity" />;
 }

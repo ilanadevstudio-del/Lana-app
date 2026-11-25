@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { PlaceholderPage } from "@/components/shell/placeholder-page";
 
 export default function Page() {
-  return <ComingSoon title="Integrations" description="Connect the apps Lana can work with, and control what it can do." />;
+  return <PlaceholderPage title="Integrations" />;
 }

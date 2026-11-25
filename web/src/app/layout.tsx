@@ -1,49 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Urbanist } from "next/font/google";
-import { Backdrop } from "@/components/backdrop";
-import { THEME_STORAGE_KEY } from "@/lib/theme";
+import { Geist, Geist_Mono } from "next/font/google";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
-const sans = Urbanist({
-  variable: "--font-urbanist",
-  subsets: ["latin"],
-});
-
-const mono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const sans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lana",
-  description: "Your personal AI assistant. Less managing. More doing.",
+  title: { default: "LANA", template: "%s · LANA" },
+  description: "Your personal operating layer. LANA understands what you need and gets it done across your apps.",
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f0ff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e0a1c" },
-  ],
+  themeColor: "#0b0b0d",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
-
-// Runs before first paint: saved preference wins, otherwise follow the OS.
-const themeScript = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      data-theme="light"
-      suppressHydrationWarning
-      className={`${sans.variable} ${mono.variable} h-full antialiased`}
-    >
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`${sans.variable} ${mono.variable} h-full`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full">
-        <Backdrop />
-        {children}
-      </body>
+      <body className="h-full overflow-hidden">{children}</body>
     </html>
   );
 }

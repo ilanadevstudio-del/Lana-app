@@ -1,6 +1,8 @@
-import { AssistantView } from "@/components/assistant/assistant-view";
-import { homeData } from "@/lib/mock/home";
+import type { Metadata } from "next";
+import { NewConversation } from "@/components/assistant/new-conversation";
+
+export const metadata: Metadata = { title: "Assistant" };
 
 export default function AssistantPage() {
-  return <AssistantView userName={homeData.user.firstName} />;
+  return <NewConversation />;
 }

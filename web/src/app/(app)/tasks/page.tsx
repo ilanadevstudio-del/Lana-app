@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { PlaceholderPage } from "@/components/shell/placeholder-page";
 
 export default function Page() {
-  return <ComingSoon title="Tasks" description="Your personal tasks and reminders, managed by you or by Lana." />;
+  return <PlaceholderPage title="Tasks" />;
 }

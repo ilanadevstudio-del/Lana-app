@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { PlaceholderPage } from "@/components/shell/placeholder-page";
 
 export default function Page() {
-  return <ComingSoon title="Calendar" description="Your schedule and upcoming commitments across connected calendars." />;
+  return <PlaceholderPage title="Calendar" />;
 }

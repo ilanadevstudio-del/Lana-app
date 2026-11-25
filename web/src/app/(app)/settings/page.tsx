@@ -1,5 +1,5 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { PlaceholderPage } from "@/components/shell/placeholder-page";
 
 export default function Page() {
-  return <ComingSoon title="Settings" description="Account, preferences and security." />;
+  return <PlaceholderPage title="Settings" />;
 }

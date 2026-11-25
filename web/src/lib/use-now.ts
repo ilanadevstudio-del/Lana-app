@@ -9,13 +9,13 @@ function subscribe(onChange: () => void) {
   return () => clearInterval(id);
 }
 
-// Snapshot is minute-precision so it stays stable between ticks.
+// Minute precision keeps the snapshot stable between ticks.
 const getSnapshot = () => Math.floor(Date.now() / MINUTE) * MINUTE;
 const getServerSnapshot = () => null;
 
 /**
  * Current time on the client, refreshed every minute.
- * Returns null during server render, since the server doesn't know the user's clock or time zone.
+ * Null during server render: the server doesn't know the viewer's clock or time zone.
  */
 export function useNow(): Date | null {
   const ms = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
